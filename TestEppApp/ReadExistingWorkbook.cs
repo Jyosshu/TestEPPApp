@@ -20,7 +20,7 @@ namespace TestEppApp
                 //int row = 1;
                 int col = 11;
 
-                var endCell = FindLastCell(worksheet);
+                var endCell = FindLastCellofWorksheet(worksheet);
 
                 for (int i = 1; i < endCell.Row; i++)
                 {
@@ -44,7 +44,7 @@ namespace TestEppApp
                             var tempDate2 = worksheet.Cells[i, col - 2].Value;
 
                             DateTime startDate = DateTime.FromOADate(Convert.ToDouble(tempDate));
-                            DateTime endDate = (tempDate2 != null && tempDate2 != string.Empty) ? DateTime.FromOADate(Convert.ToDouble(tempDate2)) : DateTime.Now;
+                            DateTime endDate = (tempDate2 != null && tempDate2.ToString() != string.Empty) ? DateTime.FromOADate(Convert.ToDouble(tempDate2)) : DateTime.Now;
                             TimeSpan timeSpan = endDate - startDate;
 
                             worksheet.Cells[i, col].Value = timeSpan.Days;
@@ -61,26 +61,72 @@ namespace TestEppApp
             }                
         }
 
-        private static ExcelCellAddress FindLastCell(ExcelWorksheet excelWorksheet)
+        public static void ReadWorkbook(string filename, int worksheetToRead)
         {
-            ExcelCellAddress excelCellAddress = excelWorksheet.Cells.End;
-            int maxRow = excelCellAddress.Row;
-            int maxCol = excelCellAddress.Column;
+            Utils.OutputDir = new DirectoryInfo($"{AppDomain.CurrentDomain.BaseDirectory}SampleApp");
+            var file = Utils.GetFileInfo(filename, false);
+
+            using (var excelPackage = new ExcelPackage(file))
+            {
+                var worksheet = excelPackage.Workbook.Worksheets[worksheetToRead];
+
+                var endCell = FindLastCellofWorksheet(worksheet);
+
+                // Build a Dictionary of the header fields in row 1.
+                Dictionary<string, int> worksheetDict = new Dictionary<string, int>();
+                for (int i = 1; i <= endCell.Column; i++)
+                {
+                    worksheetDict.Add(worksheet.Cells[1, i].Value.ToString(), i);
+                }
+
+                //foreach(KeyValuePair<string, int> pair in worksheetDict)
+                //{
+                //    Console.WriteLine($"Key: {pair.Key}, Value: {pair.Value}");
+                //}
+
+                for (int i = 1; i <= endCell.Row; i++)
+                {
+                    Console.WriteLine("{0,-40}{1,16}{2,10}", 
+                        worksheet.Cells[i, worksheetDict["Product Name"]].Value, 
+                        worksheet.Cells[i, worksheetDict["Product Number"]].Value, 
+                        worksheet.Cells[i, worksheetDict["Current List Price"]].Value);
+                }
+                
+            }
+        }
+
+        private static ExcelCellAddress FindLastCellofWorksheet(ExcelWorksheet excelWorksheet)
+        {
+            // Get the MAX Cell address in the passed worksheet to use as upper limit for iteration.
+            ExcelCellAddress endCellAddress = excelWorksheet.Cells.End;
             int row = 1;
             int col = 1;
-            int counter = 10;
-            ExcelCellAddress endCellAddress;
+            int counter = 10; // This value could be set higher or lower based on a worksheet.  I set it equal to 10 to not waste any time on rows that probably were empty.
 
-            for (int c = 1; c < maxCol; c++)
+            // Find the last header cell with data
+            for (int c = 1; c < endCellAddress.Column; c++)
             {
-                if (excelWorksheet.Cells[row, c].Value != null)
+                if (excelWorksheet.Cells[row, c].Value != null && excelWorksheet.Cells[row, c].Value.ToString() != string.Empty)
                 {
                     col = c;
                 }
+                else
+                {
+                    counter--;
+                    
+                    if (counter <= 0)
+                    {
+                        break;
+                    }
+                }
             }
 
-            for (int i = 1; i < maxRow; i++)
+            counter = 10; // reset counter
+            // Based on the 
+            for (int i = 1; i < endCellAddress.Row; i++)
             {
+
+                // Checking to see if the first or last columns in the row have data.
                 if (excelWorksheet.Cells[i, 1].Value != null || excelWorksheet.Cells[i, col].Value != null)
                 {
                     row = i;
@@ -96,9 +142,7 @@ namespace TestEppApp
                 }
             }
 
-            endCellAddress = new ExcelCellAddress(row, col);
-
-            return endCellAddress;
+            return new ExcelCellAddress(row, col);
         }
     }
 }

@@ -20,7 +20,7 @@ namespace TestEppApp
                 if (worksheet != null)
                 {
                     const int headerRow = 1;
-                    const int startRow = 3;
+                    const int startRow = 2;
                     int row = startRow;
                     int totCol = 0;
 
@@ -37,7 +37,7 @@ namespace TestEppApp
                                     int col = 1;
                                     totCol = sqlReader.FieldCount;
 
-                                    for (int i = 0; i < sqlReader.FieldCount; i++)
+                                    for (int i = 0; i < totCol; i++)
                                     {
                                         if (sqlReader.GetValue(i) != null)
                                         {
@@ -46,7 +46,6 @@ namespace TestEppApp
                                                 worksheet.Cells[headerRow, col].Value = sqlReader.GetName(i);
                                             }
                                             worksheet.Cells[row, col].Value = sqlReader.GetValue(i);
-
                                         }
 
                                         col++;

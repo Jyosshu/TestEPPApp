@@ -6,9 +6,11 @@ namespace TestEppApp
     {
         static void Main(string[] args)
         {
-            //ProductPriceHistory.CreateProductPriceHistory();
+            ProductPriceHistory.CreateProductPriceHistory();
 
-            ReadExistingWorkbook.ReadFileSaveAsNewFile("JoshTest.xlsx");
+            //ReadExistingWorkbook.ReadFileSaveAsNewFile("JoshTest.xlsx");
+
+            ReadExistingWorkbook.ReadWorkbook("JoshTest.xlsx", 0);
         }
     }
 }
