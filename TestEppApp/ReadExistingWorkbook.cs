@@ -79,11 +79,6 @@ namespace TestEppApp
                     worksheetDict.Add(worksheet.Cells[1, i].Value.ToString(), i);
                 }
 
-                //foreach(KeyValuePair<string, int> pair in worksheetDict)
-                //{
-                //    Console.WriteLine($"Key: {pair.Key}, Value: {pair.Value}");
-                //}
-
                 for (int i = 1; i <= endCell.Row; i++)
                 {
                     Console.WriteLine("{0,-40}{1,16}{2,10}", 
@@ -91,7 +86,6 @@ namespace TestEppApp
                         worksheet.Cells[i, worksheetDict["Product Number"]].Value, 
                         worksheet.Cells[i, worksheetDict["Current List Price"]].Value);
                 }
-                
             }
         }
 

@@ -1,6 +1,6 @@
 ﻿using System;
 using OfficeOpenXml;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.IO;
 
 namespace TestEppApp
