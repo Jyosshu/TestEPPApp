@@ -6,13 +6,13 @@ using System.Collections.Generic;
 
 namespace TestEppApp
 {
-    public static class ProductPriceHistory
+    public static class ExcelSpreadsheet
     {
-        public static void CreateProductPriceHistory(string worksheetName)
+        public static void CreateSpreadsheet(string filename, string worksheetName, string sqlQuery)
         {
             Utils.OutputDir = new DirectoryInfo($"{AppDomain.CurrentDomain.BaseDirectory}SampleApp");
 
-            var file = Utils.GetFileInfo("JoshTest.xlsx");
+            var file = Utils.GetFileInfo(filename);
 
             using (ExcelPackage excelPackage = new ExcelPackage(file))
             {
@@ -23,32 +23,32 @@ namespace TestEppApp
                     const int headerRow = 1;
                     const int startRow = 2;
                     int row = startRow;
-                    int totCol = 0;
+                    int totalCol = 0;
                     List<int> dateTimeColumns = new List<int>();
 
 
                     using (SqlConnection sqlConn = new SqlConnection(AppSettings.ConnectionString()))
                     {
                         sqlConn.Open();
-                        using (SqlCommand sqlCmd = new SqlCommand(query, sqlConn))
+                        using (SqlCommand sqlCmd = new SqlCommand(sqlQuery, sqlConn))
                         {
                             using (SqlDataReader sqlReader = sqlCmd.ExecuteReader())
                             {
                                 while (sqlReader.Read())
                                 {
                                     int col = 1;
-                                    totCol = sqlReader.FieldCount;
+                                    totalCol = sqlReader.FieldCount;
 
-                                    for (int i = 0; i < totCol; i++)
+                                    for (int i = 0; i < totalCol; i++)
                                     {
                                         if (sqlReader.GetValue(i) != null)
                                         {
-                                            if (row - 2 == headerRow)
+                                            if (row - 1 == headerRow)
                                             {
                                                 worksheet.Cells[headerRow, col].Value = sqlReader.GetName(i);
 
                                                 if (sqlReader.GetDataTypeName(i) == "datetime")
-                                                    dateTimeColumns.Add(i + 1);
+                                                    dateTimeColumns.Add(i + 1); // difference of index of sqlReader and worksheet
                                             }
                                             worksheet.Cells[row, col].Value = sqlReader.GetValue(i);
                                         }
@@ -59,8 +59,9 @@ namespace TestEppApp
                                 }
                                 sqlReader.Close();
 
-                                worksheet.Cells[headerRow, 1, headerRow, totCol].Style.Font.Bold = true;
-                                worksheet.Cells[headerRow, 1, headerRow, totCol].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                                // Setting Formating for Header row of the spreadsheet
+                                worksheet.Cells[headerRow, 1, headerRow, totalCol].Style.Font.Bold = true;
+                                worksheet.Cells[headerRow, 1, headerRow, totalCol].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
 
                                 foreach (int i in dateTimeColumns)
                                 {
@@ -78,20 +79,6 @@ namespace TestEppApp
                 excelPackage.Save();
             }
         }
-
-        static readonly string query = @"Select prod.Name AS [Product Name]
-, prod.ProductNumber AS [Product Number]
-, prod.Color AS [Color]
-, prod.StandardCost AS [Cost]
-, prod.ListPrice AS [Current List Price]
-, ISNULL(prod.Size, 'N/A') AS [Size]
-, ISNULL(prod.SizeUnitMeasureCode, 'N/A') AS [Size UoM]
-, listHis.StartDate AS [Start Date]
-, listHis.EndDate AS [End Date]
-, listHis.ListPrice [List Price]
-From Production.Product prod
-Inner Join Production.ProductListPriceHistory listHis On listHis.ProductID = prod.ProductID
-Order By prod.ProductID, listHis.StartDate Asc";
     }
 }
 
